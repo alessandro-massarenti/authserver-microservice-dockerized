@@ -44,10 +44,11 @@ class Login(Resource):
         self.login()
 
 
-class Users(Resource):
+class Users(Resource, Dbh):
+
     @staticmethod
     def get():
-        utenti = db.select('SELECT * FROM users.accounts')
+        utenti = Dbh._select('SELECT * FROM users.accounts')
 
         return utenti, 200
 

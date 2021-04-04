@@ -5,7 +5,7 @@ class User:
 
     @property
     def _name(self) -> str:
-        return self._data[0]
+        return self._data['name']
 
     @property
     def _surname(self) -> str:
