@@ -11,14 +11,29 @@ from werkzeug.security import check_password_hash
 
 from dbh import Dbh
 
-import json
-
 app = Flask(__name__)
 api = Api(app)
 
 app.config['SECRET_KEY'] = config.SECRET_KEY
 
 db = Dbh()
+
+
+def sign_token(data: dict) -> str:
+    prova = {'user': 'username'}
+
+    payload: dict = {
+        'iss': 'apiserver',
+        'exp': datetime.datetime.utcnow() + datetime.timedelta(minutes=10)
+    }
+
+    payload.update(prova)
+
+    token = jwt.encode(
+        payload,
+        app.config['SECRET_KEY'], algorithm="HS512")
+
+    return token
 
 
 # Resources classes-----------------------------------------------------------------------------------------------------
@@ -28,22 +43,6 @@ class Login(Resource):
     def get(self):
         self.login()
 
-    def sign_token(data: dict) -> str:
-        prova = {'user': 'username'}
-
-        payload: dict = {
-            'iss': 'apiserver',
-            'exp': datetime.datetime.utcnow() + datetime.timedelta(minutes=10)
-        }
-
-        payload.update(prova)
-
-        token = jwt.encode(
-            payload,
-            app.config['SECRET_KEY'], algorithm="HS512")
-
-        return token
-
 
 class Users(Resource):
     @staticmethod
@@ -52,21 +51,20 @@ class Users(Resource):
 
         return utenti, 200
 
+    def post(self):
+        # Create new user
+        # Requires json payload with:
+        # name, surname, email, password
+        pass
 
-class UsersId(Resource):
+
+class UsersById(Resource):
 
     @staticmethod
     def get(email: str):
         utenti = db.select('SELECT * FROM users.accounts WHERE email = %s', (email,))
 
         return utenti, 200
-
-    def post(self):
-        # Create new user
-        # Requires json payload with:
-        # name, surname, email, password
-
-        pass
 
     def put(self):
         pass
@@ -75,7 +73,7 @@ class UsersId(Resource):
 # Resource adding to the API -------------------------------------------------------------------------------------------
 
 api.add_resource(Users, '/users')
-api.add_resource(UsersId, '/users/<string:email>')
+api.add_resource(UsersById, '/users/<string:email>')
 api.add_resource(Login, '/login')
 
 if __name__ == '__main__':

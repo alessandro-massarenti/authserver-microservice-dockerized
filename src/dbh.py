@@ -22,7 +22,7 @@ class Dbh:
     def _cursor(self):
         self._connect().cursor(cursor_factory=extras.DictCursor)
 
-    def select(self, sql, data=None) -> dict:
+    def _select(self, sql, data=None) -> dict:
         conn = self._connect()
         curr = conn.cursor(cursor_factory=extras.DictCursor)
         curr.execute(sql, data)
@@ -44,3 +44,4 @@ class Dbh:
         conn.close()
 
         return test
+
