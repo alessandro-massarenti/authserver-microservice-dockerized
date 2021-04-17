@@ -2,21 +2,19 @@
 
 import config
 
-from flask import Flask, request, make_response
+from flask import Flask
 from flask_restful import Api, Resource
 import jwt
 import datetime
 
-from werkzeug.security import check_password_hash
-
-from dbh import Dbh
+from old.dbiface import DbIface
 
 app = Flask(__name__)
 api = Api(app)
 
 app.config['SECRET_KEY'] = config.SECRET_KEY
 
-db = Dbh()
+db = DbIface()
 
 
 def sign_token(data: dict) -> str:
@@ -44,11 +42,11 @@ class Login(Resource):
         self.login()
 
 
-class Users(Resource, Dbh):
+class RUsers(Resource, DbIface):
 
     @staticmethod
     def get():
-        utenti = Dbh._select('SELECT * FROM users.accounts')
+
 
         return utenti, 200
 
@@ -59,7 +57,7 @@ class Users(Resource, Dbh):
         pass
 
 
-class UsersById(Resource):
+class RUsersById(Resource):
 
     @staticmethod
     def get(email: str):
@@ -73,8 +71,8 @@ class UsersById(Resource):
 
 # Resource adding to the API -------------------------------------------------------------------------------------------
 
-api.add_resource(Users, '/users')
-api.add_resource(UsersById, '/users/<string:email>')
+api.add_resource(RUsers, '/users')
+api.add_resource(RUsersById, '/users/<string:email>')
 api.add_resource(Login, '/login')
 
 if __name__ == '__main__':
