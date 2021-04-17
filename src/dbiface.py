@@ -16,10 +16,10 @@ class DbIface:
         conn = 0
         try:
             conn = psycopg2.connect(dbname=self._db_name,
-                             password=self._db_password,
-                             user=self._db_user,
-                             host=self._db_host
-                             )
+                                    password=self._db_password,
+                                    user=self._db_user,
+                                    host=self._db_host
+                                    )
         except psycopg2.Error:
             print(psycopg2.Error)
         return conn
@@ -34,7 +34,7 @@ class DbIface:
         curr.execute(sql, data)
 
         test: dict = {}
-        identifier = 0
+        identifier: int = 0
 
         for item in curr:
 
@@ -43,18 +43,18 @@ class DbIface:
             for key, value in item.items():
                 result.update({key: value})
 
-            test.update({"__data" + str(identifier): result})
+            test.update({identifier: result})
             identifier += 1
 
         self.__close(conn, curr)
 
         return test
 
-    def _insert(self, sql: str):
+    def _insert(self, sql: str, data=None):
 
         conn = self._connect()
         curr = conn.cursor()
-        curr.execute(sql)
+        curr.execute(sql, data)
         conn.commit()
         self.__close(conn, curr)
 

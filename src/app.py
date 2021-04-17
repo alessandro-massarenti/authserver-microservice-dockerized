@@ -9,6 +9,7 @@ import datetime
 import psycopg2
 from werkzeug.security import check_password_hash, generate_password_hash
 from flask import request
+from usermodel import UserModel
 
 app = Flask(__name__)
 api = Api(app)
@@ -44,20 +45,38 @@ class Login(Resource):
         data = request.get_json()
 
         # Richiede i dati di login, ovvero nome utente e password
-        if not data['username'] and not data['password']:
+        if not data['email'] and not data['password']:
             return {"Error": "Bad request"}, 400
 
+        user = UserModel(data['email'])
+
         # confronta i dati inseriti con quelli presenti nel database
-        if not check_password_hash("lelel", data['password']):
+        if not check_password_hash(user.password, data['password']):
             return {"Error": "Unauthorized"}, 401
 
-        #ritorna un token jwt con le info prescelte
+        # ritorna un token jwt con le info prescelte
         return {"token": sign_token()}, 200
 
     @staticmethod
     def post():
-        request.get_json()
+        data = request.get_json()
 
+        if not data['email'] and not data['password'] and not data['name'] and not data['surname']:
+            return {"Error": "Bad request"}, 400
+
+        data['password'] = generate_password_hash(data['password'])
+
+        user = UserModel(data['email'])
+        user.name = data['name']
+        user.surname = data['surname']
+        user.password = data['password']
+
+        try:
+            user.push()
+        except KeyError:
+            return {"Error": "Server error"}, 500
+
+        return {"inserito utente", 200}
 
 
 # class RUsers(Resource, DbIface):
