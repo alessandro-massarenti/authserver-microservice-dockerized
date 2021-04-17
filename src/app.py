@@ -3,29 +3,26 @@
 import config
 
 from flask import Flask
-from flask_restful import Api, Resource
+from flask_restful import Api, Resource, reqparse
 import jwt
 import datetime
-
-from old.dbiface import DbIface
+import psycopg2
+from werkzeug.security import check_password_hash, generate_password_hash
+from flask import request
 
 app = Flask(__name__)
 api = Api(app)
 
 app.config['SECRET_KEY'] = config.SECRET_KEY
 
-db = DbIface()
 
-
-def sign_token(data: dict) -> str:
-    prova = {'user': 'username'}
-
+def sign_token(data: dict = None) -> str:
     payload: dict = {
-        'iss': 'apiserver',
+        'iss': config.SERVER_NAME,
         'exp': datetime.datetime.utcnow() + datetime.timedelta(minutes=10)
     }
 
-    payload.update(prova)
+    payload.update(data)
 
     token = jwt.encode(
         payload,
@@ -35,44 +32,65 @@ def sign_token(data: dict) -> str:
 
 
 # Resources classes-----------------------------------------------------------------------------------------------------
+Login_get_args = reqparse.RequestParser()
+Login_get_args.add_argument("name")
+
 
 class Login(Resource):
+
     # Path responsable for giving out jwt to people who are logged in
-    def get(self):
-        self.login()
-
-
-class RUsers(Resource, DbIface):
-
     @staticmethod
     def get():
+        data = request.get_json()
 
+        # Richiede i dati di login, ovvero nome utente e password
+        if not data['username'] and not data['password']:
+            return {"Error": "Bad request"}, 400
 
-        return utenti, 200
+        # confronta i dati inseriti con quelli presenti nel database
+        if not check_password_hash("lelel", data['password']):
+            return {"Error": "Unauthorized"}, 401
 
-    def post(self):
-        # Create new user
-        # Requires json payload with:
-        # name, surname, email, password
-        pass
-
-
-class RUsersById(Resource):
+        #ritorna un token jwt con le info prescelte
+        return {"token": sign_token()}, 200
 
     @staticmethod
-    def get(email: str):
-        utenti = db.select('SELECT * FROM users.accounts WHERE email = %s', (email,))
+    def post():
+        request.get_json()
 
-        return utenti, 200
 
-    def put(self):
-        pass
+
+# class RUsers(Resource, DbIface):
+#
+#   @staticmethod
+#    def get():
+#
+#
+#        return utenti, 200
+#
+#    def post(self):
+#        # Create new user
+#        # Requires json payload with:
+#       # name, surname, email, password
+#       pass
+
+
+# class RUsersById(Resource):
+#
+#    @staticmethod
+#    def get(email: str):
+#        utenti = db.select('SELECT * FROM users.accounts WHERE email = %s', (email,))
+#
+#       return utenti, 200
+#
+#    def put(self):
+#        pass
 
 
 # Resource adding to the API -------------------------------------------------------------------------------------------
 
-api.add_resource(RUsers, '/users')
-api.add_resource(RUsersById, '/users/<string:email>')
+# api.add_resource(RUsers, '/users')
+# api.add_resource(RUsersById, '/users/<string:email>')
 api.add_resource(Login, '/login')
 
 if __name__ == '__main__':
