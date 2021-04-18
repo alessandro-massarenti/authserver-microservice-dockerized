@@ -1,6 +1,6 @@
 #!/usr/bin/python3
 import psycopg2
-from psycopg2 import extras
+from psycopg2 import extras, errors
 import config
 
 
@@ -51,11 +51,14 @@ class DbIface:
 
     def _exec(self, sql: str, data=None):
 
-        conn = self._connect()
-        curr = conn.cursor()
-        curr.execute(sql, data)
-        conn.commit()
-        self.__close(conn, curr)
+        try:
+            conn = self._connect()
+            curr = conn.cursor()
+            curr.execute(sql, data)
+            conn.commit()
+            self.__close(conn, curr)
+        except psycopg2.IntegrityError:
+            raise FileExistsError
 
     @staticmethod
     def __close(conn, curr):

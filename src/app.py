@@ -17,7 +17,7 @@ api = Api(app)
 app.config['SECRET_KEY'] = config.SECRET_KEY
 
 
-def sign_token(data: dict = None) -> str:
+def sign_token(data: dict = {}) -> str:
     payload: dict = {
         'iss': config.SERVER_NAME,
         'exp': datetime.datetime.utcnow() + datetime.timedelta(minutes=10)
@@ -75,6 +75,8 @@ class Login(Resource):
             user.push()
         except KeyError:
             return {"Error": "Server error"}, 500
+        except FileExistsError:
+            return {"Error": "Email already in the database"}, 400
 
         return {"Msg": "inserito utente"}, 200
 

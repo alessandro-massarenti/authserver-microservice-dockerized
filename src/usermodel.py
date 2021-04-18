@@ -16,6 +16,7 @@ class UserModel(DbIface):
 
         # La proprietà email viene settata con l'email del costruttore
         self.email = email
+        self.__fetch()
 
     def __del__(self):
         # Ci si assicura che l'ultima versione sia salvata nel database
@@ -34,10 +35,24 @@ class UserModel(DbIface):
         # Se l'utente non esiste nel database viene inserito come nuovo
         # Se l'utente eiste nel database si cambiano i campi dati richiesti
         if self.__modified:
-            self.__db._exec(
-                sql='INSERT INTO users.accounts(name,surname,password,email,role) VALUES (%s,%s,%s,%s,%s)',
-                data=(self.name, self.surname, self.password, self.email, "standard"))
-            self.__modified = False
+            if self.__fetched:
+                try:
+                    self.__db._exec(
+                        sql='UPDATE users.accounts '
+                            'SET name  = %s,surname = %s,password = %s,role = %s '
+                            'WHERE email = %s',
+                        data=(self.name, self.surname, self.password, self.email, "standard"))
+                    self.__modified = False
+                except:
+                    pass
+            else:
+                try:
+                    self.__db._exec(
+                        sql='INSERT INTO users.accounts(name,surname,password,email,role) VALUES (%s,%s,%s,%s,%s)',
+                        data=(self.name, self.surname, self.password, self.email, "standard"))
+                    self.__modified = False
+                except FileExistsError:
+                    raise
 
     @property
     def email(self) -> str:
