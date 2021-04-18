@@ -33,7 +33,7 @@ class DbIface:
         curr = conn.cursor(cursor_factory=extras.DictCursor)
         curr.execute(sql, data)
 
-        test: dict = {}
+        result: dict = {}
         identifier: int = 0
 
         for item in curr:
@@ -43,14 +43,13 @@ class DbIface:
             for key, value in item.items():
                 result.update({key: value})
 
-            test.update({identifier: result})
+            result.update({identifier: result})
             identifier += 1
 
         self.__close(conn, curr)
+        return result
 
-        return test
-
-    def _insert(self, sql: str, data=None):
+    def _exec(self, sql: str, data=None):
 
         conn = self._connect()
         curr = conn.cursor()

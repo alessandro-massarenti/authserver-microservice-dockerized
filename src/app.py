@@ -76,7 +76,7 @@ class Login(Resource):
         except KeyError:
             return {"Error": "Server error"}, 500
 
-        return {"inserito utente", 200}
+        return {"Msg": "inserito utente"}, 200
 
 
 # class RUsers(Resource, DbIface):
